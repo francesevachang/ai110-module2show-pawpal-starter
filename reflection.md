@@ -41,6 +41,23 @@
 
 ---
 
+## 1-2. Sample Output
+
+The terminal output from running `main.py`:
+
+```
+Today's Schedule
+========================================
+Plan for Harvey (75 of 180 min used):
+  07:00-07:15  Breakfast (Rex, high priority, 15 min)
+  07:15-07:45  Morning walk (Rex, high priority, 30 min)
+  07:45-07:55  Litter cleanup (Milo, medium priority, 10 min)
+  07:55-08:15  Play time (Milo, low priority, 20 min)
+Tasks are chosen highest-priority first, shortest-first to break ties; this fills the budget greedily rather than searching for the optimal mix.
+```
+
+---
+
 ## 2. Scheduling Logic and Tradeoffs
 
 **a. Constraints and priorities**
