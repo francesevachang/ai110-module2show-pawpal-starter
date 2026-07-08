@@ -12,8 +12,19 @@
     1. Let user enter basic owner and pet information.
     2. Let a user add/edit tasks and their durations and priorities.
     3. Generate schedule based on durations and priorities.
-    
+
+    Main objects needed for the system (attributes and methods for each are listed in the following bullet point): 
+
+    1. Owner
+    2. Pet
+    3. Task
+    4. Scheduler
+
 - What classes did you include, and what responsibilities did you assign to each?
+
+    The following is the initial UML design:
+
+    ![Class diagram](diagrams/initial_uml.png)
 
 **b. Design changes**
 
