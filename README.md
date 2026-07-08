@@ -72,14 +72,66 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+All scheduling logic lives in [pawpal_system.py](pawpal_system.py), split across the
+`Task`, `Owner`, and `Scheduler` classes. The table summarizes each feature and the
+method that implements it; details follow below.
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Sorting | [`Scheduler.sort_tasks()`](pawpal_system.py#L248), [`Scheduler.sort_by_time()`](pawpal_system.py#L283) | Priority-then-duration for planning; start-time order for display |
+| Filtering | [`Owner.filter_tasks()`](pawpal_system.py#L184), [`Scheduler._all_tasks()`](pawpal_system.py#L235) | By pet name and/or completion status; scheduler skips completed tasks |
+| Conflict detection | [`Scheduler.detect_conflicts()`](pawpal_system.py#L292) | Warns on pinned tasks whose time slots overlap |
+| Recurring tasks | [`Task.next_occurrence()`](pawpal_system.py#L80), [`Pet.mark_task_complete()`](pawpal_system.py#L150) | Daily/weekly tasks roll forward on completion |
+
+### Sorting behavior
+
+Two distinct orderings serve two different needs:
+
+- **Planning order — [`Scheduler.sort_tasks()`](pawpal_system.py#L248).** Returns
+  `(pet, task)` pairs sorted by priority first (`high` → `medium` → `low`, via the
+  `PRIORITY_RANK` map) and then by shortest duration as the tie-breaker. Shortest-first
+  at equal priority lets us fit more tasks into the same time budget. This is the order
+  [`build_plan()`](pawpal_system.py#L259) walks when greedily filling the day.
+- **Display order — [`Scheduler.sort_by_time()`](pawpal_system.py#L283).** Once a plan
+  is built, this returns its `ScheduledItem`s sorted by `start_minute` (earliest first)
+  so the timeline reads chronologically.
+
+### Filtering behavior
+
+- **By pet and/or completion — [`Owner.filter_tasks(completed=None, pet_name=None)`](pawpal_system.py#L184).**
+  Both filters are optional and combine with AND. `pet_name` is matched
+  case-insensitively (ignoring surrounding whitespace); `completed` keeps only tasks
+  whose status matches. Passing neither is equivalent to
+  [`Owner.get_all_tasks()`](pawpal_system.py#L180).
+- **Skipping completed work — [`Scheduler._all_tasks()`](pawpal_system.py#L235).** The
+  scheduler only ever considers not-yet-completed tasks, so the time budget is spent on
+  work that still needs doing. Tasks that don't fit the budget are reported separately
+  by [`explain()`](pawpal_system.py#L337).
+
+### Conflict detection logic
+
+[`Scheduler.detect_conflicts()`](pawpal_system.py#L292) returns a list of human-readable
+warning strings (empty when there are no conflicts, and it never raises). Only tasks
+with an explicit `start_time` are checked — the greedy `build_plan()` already lays
+unpinned tasks back-to-back so they never overlap, so conflicts only arise when the user
+pins two tasks to clashing times. It compares every pair of pinned, incomplete tasks
+**across all pets** (one owner can only care for one pet at a time) using the standard
+interval-overlap test: two tasks clash when each starts before the other ends
+(`start_a < end_b and start_b < end_a`). Warnings are emitted in chronological order.
+
+### Recurring task logic
+
+- **[`Task.next_occurrence(from_date=None)`](pawpal_system.py#L80).** Returns a fresh,
+  incomplete copy of the task with its `due_date` advanced by one interval. Only `daily`
+  and `weekly` frequencies recur (see the `RECURRENCE_DELTA` map and the
+  [`Task.is_recurring`](pawpal_system.py#L71) property); `monthly` and one-off tasks
+  return `None`. The next due date is computed from *today* by default (not the old due
+  date), so a task completed late still lands one interval from now rather than in the
+  past. `timedelta` handles calendar math, so completing a daily task on Dec 31 correctly
+  yields Jan 1.
+- **[`Pet.mark_task_complete()`](pawpal_system.py#L150).** Marks a task done and, if it
+  recurs, appends its next occurrence to the pet's task list — so finishing a daily walk
+  automatically queues tomorrow's.
 
 ## 📸 Demo Walkthrough
 

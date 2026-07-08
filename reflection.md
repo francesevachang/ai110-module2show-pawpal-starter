@@ -68,7 +68,37 @@ Tasks are chosen highest-priority first, shortest-first to break ties; this fill
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+
+    **Conflict detection checks overlapping durations, but only for tasks the
+    user explicitly pins to a `start_time`.** `Scheduler.detect_conflicts()`
+    compares the full time *interval* of each pinned task
+    (`start_time` … `start_time + duration`), so a 09:00 task lasting 30 min is
+    correctly flagged against a 09:15 task — not just exact start-time matches.
+    However, tasks *without* a `start_time` are laid out back-to-back by the
+    greedy `build_plan()` and are never considered "conflicting," because by
+    construction they can't overlap. So the scheduler detects clashes among
+    fixed-time commitments (a vet appointment, a grooming slot) but does not try
+    to resolve them — it returns a warning string rather than rearranging tasks
+    or crashing.
+
 - Why is that tradeoff reasonable for this scenario?
+
+    A pet owner's day has a few genuinely fixed commitments and many flexible
+    chores. Modeling only the fixed ones as pinned keeps the common case simple
+    (the greedy planner just fills the budget) while still catching the real
+    double-booking risk — one owner can't be at the vet and the groomer at once.
+    Warning instead of auto-resolving keeps the owner in control: they see the
+    clash and decide what to move, which is safer than the program silently
+    dropping or shifting a task they cared enough about to pin.
+
+    On the implementation side, I also traded a micro-optimization for
+    readability here. My first version sorted the pinned tasks and used an early
+    `break` to skip comparisons once tasks started after the current one ended
+    (an O(n log n) short-circuit). I replaced it with a straightforward
+    `itertools.combinations(pinned, 2)` pass: it is O(n²), but since a day has
+    only a handful of pinned tasks the cost is negligible, and the pairwise
+    intent reads far more clearly. I kept the sort — not for speed, but so
+    warnings print in chronological order.
 
 ---
 
