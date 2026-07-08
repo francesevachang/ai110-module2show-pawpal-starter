@@ -29,7 +29,15 @@
 **b. Design changes**
 
 - Did your design change during implementation?
+
+    Yes.
 - If yes, describe at least one change and why you made it.
+
+    One thing that was changed: The Scheduler now plans for an *Owner* rather than a single Pet (what the original version does), so an owner
+    with several pets can share one daily time budget.
+
+    This is the new UML:
+    ![Class diagram](diagrams/new_uml.png)
 
 ---
 

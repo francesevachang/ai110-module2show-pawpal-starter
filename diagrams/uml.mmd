@@ -26,16 +26,27 @@ classDiagram
         +__repr__() str
     }
 
-    class Scheduler {
+    class ScheduledItem {
         +Pet pet
+        +Task task
+        +int start_minute
+        +end_minute() int
+    }
+
+    class Scheduler {
+        +Owner owner
         +int available_minutes
-        +sort_tasks() list~Task~
-        +build_plan() list~Task~
+        +int day_start_minute
+        +list~ScheduledItem~ plan
+        +sort_tasks() list
+        +build_plan() list~ScheduledItem~
         +total_time(plan) int
         +explain() str
     }
 
     Owner "1" --> "*" Pet : owns
     Pet "1" --> "*" Task : has
-    Scheduler --> Pet : schedules for
-    Scheduler ..> Task : produces plan of
+    Scheduler --> Owner : schedules for
+    Scheduler "1" --> "*" ScheduledItem : produces
+    ScheduledItem --> Task : places
+    ScheduledItem --> Pet : belongs to
