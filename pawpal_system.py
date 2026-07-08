@@ -34,6 +34,7 @@ class Task:
     completed: bool = False  # whether the task has been done
 
     def __post_init__(self) -> None:
+        """Normalize and validate the priority and duration fields."""
         # Normalize and validate up front so a typo can't silently sort a task
         # to the bottom of the plan later on.
         self.priority = str(self.priority).strip().lower()
@@ -53,6 +54,7 @@ class Task:
         self.completed = False
 
     def __repr__(self) -> str:
+        """Return a compact string showing the task's fields and status."""
         status = "done" if self.completed else "todo"
         return (
             f"Task({self.name!r}, {self.duration}min, {self.priority}, "
@@ -117,6 +119,7 @@ class ScheduledItem:
 
     @property
     def end_minute(self) -> int:
+        """Return when this item ends, in minutes since midnight."""
         return self.start_minute + self.task.duration
 
 
@@ -124,6 +127,7 @@ class Scheduler:
     """Builds a daily plan across all of an owner's pets within one time budget."""
 
     def __init__(self, owner: "Owner", day_start_minute: int = DEFAULT_DAY_START):
+        """Set up the scheduler for an owner and the time the care day starts."""
         self.owner = owner
         self.day_start_minute = day_start_minute
         self.plan: list = []  # cached result of the last build_plan() call
